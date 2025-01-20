@@ -2,8 +2,8 @@
 import { verifyAquaChain, verifyRevision } from "./core/revision";
 import { verifySignature } from "./core/signature";
 import { verifyWitness } from "./core/witness";
-import { AquaChainResult,  RevisionAquaChainResult,  RevisionVerificationResult } from "./models/library_models";
-import { AquaChain, Revision } from "./models/protocol_models";
+import { AquaChainResult,  FileData,  RevisionAquaChainResult } from "./models/library_models";
+import { AquaChain, ProtocolLogs, Revision } from "./models/protocol_models";
 
 export *  from "./models/library_models";
 
@@ -55,41 +55,38 @@ export default class AquaVerifier {
     }
 
 
-    public verifyRevision(revision: Revision): Promise<RevisionVerificationResult> {
+    public verifyRevision(revision: Revision, linkedRevisions: Array<Revision>, fileData: Array<FileData>): Promise<RevisionAquaChainResult> {
         if (this.options.doAlchemyKeyLookUp && this.options.alchemyKey === "") {
             throw new Error("ALCHEMY KEY NOT SET");
         }
-        return verifyRevision(revision, this.options.alchemyKey, this.options.doAlchemyKeyLookUp)
+        return verifyRevision(revision,linkedRevisions, fileData)
 
     }
 
-    public verifySignature(signature: Revision, previous_hash: string) {
-        return verifySignature(signature , previous_hash)
+    public verifySignature(signature: Revision) : Promise <[boolean, ProtocolLogs[]] > {
+        return verifySignature(signature)
       
     }
 
     public verifyWitness(witness: Revision, verification_hash: string,
-        doVerifyMerkleProof: boolean) {
+        doVerifyMerkleProof: boolean) : Promise <[boolean, ProtocolLogs[]] > {
         if (this.options.doAlchemyKeyLookUp && this.options.alchemyKey === "") {
             throw new Error("ALCHEMY KEY NOT SET");
         }
-        return verifyWitness(witness, verification_hash, doVerifyMerkleProof, this.options.alchemyKey, this.options.doAlchemyKeyLookUp)
+        // witness merkle proof verification is not implemented
+            // its to be improved in future
+        return verifyWitness(witness, false)
 
     }
 
    
 
-    public verifyMerkleTree() {
-        throw new Error("Unimplmeneted error .... ");
-
-    }
-
-    public verifyAquaChain(aquaChain: AquaChain): Promise<RevisionAquaChainResult> {
+    public verifyAquaChain(aquaChain: AquaChain, linkedRevisions: Array<Revision>, fileData: Array<FileData>): Promise<RevisionAquaChainResult> {
         if (this.options.doAlchemyKeyLookUp && this.options.alchemyKey === "") {
             throw new Error("ALCHEMY KEY NOT SET");
         }
 
-        return verifyAquaChain(aquaChain, this.options.alchemyKey, this.options.doAlchemyKeyLookUp)
+        return verifyAquaChain(aquaChain, linkedRevisions, fileData)
 
     }
 }

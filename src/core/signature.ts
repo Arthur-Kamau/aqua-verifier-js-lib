@@ -1,21 +1,11 @@
-import { ResultStatus, ResultStatusEnum } from "../models/library_models"
-import { Revision } from "../models/protocol_models"
-import { verifySignatureUtil } from "../utils/utils"
+import { RevisionAquaChainResult } from "../models/library_models"
+import { ProtocolLogs, Revision } from "../models/protocol_models"
 
-export function verifySignature(signature: Revision, previous_verification_hash: string): ResultStatus {
+export async function  verifySignature(signature: Revision): Promise <[boolean, ProtocolLogs[]] > {
 
-    let defaultResultStatus: ResultStatus = {
-        status: ResultStatusEnum.MISSING,
-        successful: false,
-        message: ""
-    }
+    let isOk = false;
+    let logs: ProtocolLogs[] = [];
 
-    let [signatureOk, signatureMessage] = verifySignatureUtil(signature, previous_verification_hash)
 
-    defaultResultStatus.status = ResultStatusEnum.AVAILABLE
-    defaultResultStatus.successful = signatureOk
-    defaultResultStatus.message = signatureMessage
-
-    return defaultResultStatus;
-
+    return [isOk, logs];
 }

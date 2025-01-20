@@ -1,7 +1,9 @@
-import { RevisionVerificationResult, ResultStatus, ResultStatusEnum, RevisionAquaChainResult, AquaChainResult } from "../models/library_models";
+import { RevisionAquaChainResult, AquaChainResult, FileData } from "../models/library_models";
 import { AquaChain, ProtocolLogs, ProtocolLogsType, Revision } from "../models/protocol_models";
 import { dict2Leaves, getHashSum, getTimestamp, prepareNonce, sha256Hasher } from "../utils/utils";
 import { MerkleTree } from "merkletreejs"
+import { verifySignature } from "./signature";
+import { verifyWitness } from "./witness";
 
 
 export function generateGenesisRevisionUtil(file_name: string, file_data: string): AquaChainResult {
@@ -190,10 +192,11 @@ export function removeLastRevision(aqua_chain: AquaChain): AquaChainResult {
 }
 
 
-export async function verifyAquaChain(aquaChain: AquaChain, alchemyKey: string, doAlchemyKeyLookUp: boolean): Promise<RevisionAquaChainResult> {
+export async function verifyAquaChain(aquaChain: AquaChain, linkedRevisions: Array<Revision>, fileData: Array<FileData>): Promise<RevisionAquaChainResult> {
 
     const hashChainResult: RevisionAquaChainResult = {
-        successful: true,
+        successful: false,
+        logs: [],
         revisionResults: []
     }
 
@@ -201,7 +204,7 @@ export async function verifyAquaChain(aquaChain: AquaChain, alchemyKey: string, 
 
     for (let j = 0; j < revisionHashes.length; j++) {
         const revision = aquaChain.revisions[revisionHashes[j]]
-        const revisionResult: RevisionVerificationResult = await verifyRevision(revision, alchemyKey, doAlchemyKeyLookUp)
+        const revisionResult: RevisionAquaChainResult = await verifyRevision(revision,linkedRevisions, fileData)
         hashChainResult.revisionResults.push(revisionResult)
     }
 
@@ -216,77 +219,73 @@ export async function verifyAquaChain(aquaChain: AquaChain, alchemyKey: string, 
 }
 
 
-export async function verifyRevision(revision: Revision, alchemyKey: string, doAlchemyKeyLookUp: boolean): Promise<RevisionVerificationResult> {
-    let defaultResultStatus: ResultStatus = {
-        status: ResultStatusEnum.MISSING,
+export async function verifyRevision(revision: Revision,linkedRevisions: Array<Revision>, fileData: Array<FileData>): Promise<RevisionAquaChainResult> {
+
+
+
+    let logs: ProtocolLogs[] = [];
+    let hashChainResult: RevisionAquaChainResult = {
         successful: false,
-        message: ""
+        logs: [],
+        revisionResults: []
     }
 
-    let revisionResult: RevisionVerificationResult = {
-        successful: false,
-        file_verification: JSON.parse(JSON.stringify(defaultResultStatus)),
-        content_verification: JSON.parse(JSON.stringify(defaultResultStatus)),
-        witness_verification: JSON.parse(JSON.stringify(defaultResultStatus)),
-        signature_verification: JSON.parse(JSON.stringify(defaultResultStatus)),
-        metadata_verification: JSON.parse(JSON.stringify(defaultResultStatus))
+
+    let typeOk: boolean = false
+    switch (revision.revision_type) {
+
+        case "content":
+            typeOk = true
+            break
+        case "file_hash":
+            const fileContent = fileData.find((file) => file.file_hash === revision.file_hash)
+            if (fileContent == undefined) {
+                logs.push({
+                    log: ` file hash not found file hash: ${revision.file_hash}`,
+                    log_type: ProtocolLogsType.INFO
+                });
+
+                break;
+            }
+
+            const fileHash = getHashSum(fileContent?.file_content!!)
+            console.log(`Found file hash: ${fileHash}, Original file hash: ${revision.file_hash}`)
+            typeOk = fileHash === revision.file_hash
+            break
+        case "signature":
+            // Verify signature
+            let [ok, logs_data] = await verifySignature(
+                revision,
+            )
+            logs = logs.concat(logs_data)
+            typeOk = ok
+            break
+        case "witness":
+            // Verify witness
+            // witness merkle proof verification is not implemented
+            // its to be improved in future
+            let [ok2, logs_data2] = await verifyWitness(
+                revision,
+                false, 
+            )
+            logs = logs.concat(logs_data2)
+            typeOk = ok2
+            break
+            break
+        case "link":
+            
+            // const offlineData = await readExportFile(input.link_uri)
+            // let linkStatus: string
+            // [linkStatus, _] = await verifyPage(offlineData, false, doVerifyMerkleProof)
+            // typeOk = (linkStatus === VERIFIED_VERIFICATION_STATUS)
+           
+            break
+
     }
 
-    // const [fileIsCorrect, fileOut] = verifyFileUtil(revision.content);
-    // revisionResult.file_verification.status = ResultStatusEnum.AVAILABLE;
-    // revisionResult.file_verification.successful = fileIsCorrect;
-    // revisionResult.file_verification.message = fileOut.error_message ?? "";
+    hashChainResult.successful = typeOk;
+    hashChainResult.logs = logs;
+    return hashChainResult;
 
-    // Verify Content
-    // let [verifyContentIsOkay, resultMessage] = verifyContentUtil(revision.content);
-    // revisionResult.content_verification.status = ResultStatusEnum.AVAILABLE;
-    // revisionResult.content_verification.successful = verifyContentIsOkay;
-    // revisionResult.content_verification.message = resultMessage;
-
-    // // Verify Metadata 
-    // let [metadataOk, metadataHashMessage] = verifyMetadataUtil(revision.metadata);
-    // revisionResult.metadata_verification.status = ResultStatusEnum.AVAILABLE;
-    // revisionResult.metadata_verification.successful = metadataOk;
-    // revisionResult.metadata_verification.message = metadataHashMessage;
-
-    // // Verify Signature
-    // if (revision.signature) {
-    //     let [signatureOk, signatureMessage] = verifySignatureUtil(revision.signature, revision.metadata.previous_verification_hash ?? "");
-    //     revisionResult.signature_verification.status = ResultStatusEnum.AVAILABLE;
-    //     revisionResult.signature_verification.successful = signatureOk;
-    //     revisionResult.signature_verification.message = signatureMessage;
-    // }
-
-    // // Verify Witness (asynchronous)
-    // if (revision.witness) {
-    //     try {
-    //         const [success, message] = await verifyWitnessUtil(
-    //             revision.witness,
-    //             revision.metadata.previous_verification_hash ?? "",
-    //             revision.witness.structured_merkle_proof.length > 1,
-    //             alchemyKey,
-    //             doAlchemyKeyLookUp
-
-    //         );
-    //         revisionResult.witness_verification.status = ResultStatusEnum.AVAILABLE;
-    //         revisionResult.witness_verification.successful = success;
-    //         revisionResult.witness_verification.message = message // message if needed
-    //     } catch (err) {
-    //         console.log("Witnessing error: ", err);
-    //     }
-    // }
-
-    // Check the overall status
-    let allSuccessful = true;
-    for (const verification of Object.values(revisionResult)) {
-        if (verification.status === ResultStatusEnum.AVAILABLE && !verification.successful) {
-            allSuccessful = false;
-            break;
-        }
-    }
-
-    // Update the overall successful status
-    revisionResult.successful = allSuccessful;
-
-    return revisionResult;
 }
+

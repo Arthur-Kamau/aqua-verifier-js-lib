@@ -16,28 +16,18 @@ export interface Timestamp {
 
 export interface RevisionAquaChainResult {
     successful: boolean,
-    revisionResults : Array<RevisionVerificationResult>
+    logs: ProtocolLogs[],
+    revisionResults : Array<RevisionAquaChainResult>
+    
 }
 
-export interface RevisionVerificationResult {
-    successful: boolean,
-    file_verification: ResultStatus,
-    content_verification: ResultStatus,
-    witness_verification: ResultStatus,
-    signature_verification: ResultStatus,
-    metadata_verification: ResultStatus,
+export interface FileData {
+    file_hash: string,
+    file_name: string,
+    file_content: string,
 }
 
-export enum ResultStatusEnum {
-    MISSING,
-    AVAILABLE
-}
 
-export interface ResultStatus {
-    status: ResultStatusEnum
-    successful: boolean
-    message: string
-}
 
 export interface VerifyFileResult {
     error_message: string | null,

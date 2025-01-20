@@ -64,27 +64,9 @@ interface PageData {
 }
 declare function getTimestampDirect(pageData: PageData): string | undefined;
 declare function getTimestampSafe(pageData: PageData): string | undefined;
-interface RevisionAquaChainResult {
-    successful: boolean;
-    revisionResults: Array<RevisionVerificationResult>;
-}
-interface RevisionVerificationResult {
-    successful: boolean;
-    file_verification: ResultStatus;
-    content_verification: ResultStatus;
-    witness_verification: ResultStatus;
-    signature_verification: ResultStatus;
-    metadata_verification: ResultStatus;
-}
-declare enum ResultStatusEnum {
-    MISSING = 0,
-    AVAILABLE = 1
-}
-interface ResultStatus {
-    status: ResultStatusEnum;
-    successful: boolean;
-    message: string;
-}
+
+
+
 interface VerifyFileResult {
     error_message: string | null;
     file_hash: string | null;
@@ -113,10 +95,10 @@ declare class AquaVerifier {
     constructor(options?: VerificationOptions);
     fetchVerificationOptions(): VerificationOptions;
     verifyRevision(revision: Revision): Promise<RevisionVerificationResult>;
-    verifySignature(signature: RevisionSignature, previous_hash: string): ResultStatus | null;
-    verifyWitness(witness: RevisionWitness, verification_hash: string, doVerifyMerkleProof: boolean): Promise<ResultStatus>;
+    verifySignature(signature: RevisionSignature, previous_hash: string): RevisionVerificationResult | null;
+    verifyWitness(witness: RevisionWitness, verification_hash: string, doVerifyMerkleProof: boolean): Promise<RevisionVerificationResult>;
     verifyMerkleTree(): void;
     verifyAquaChain(hashChain: HashChain): Promise<RevisionAquaChainResult>;
 }
 
-export { type CheckEtherScanResult, type FileContent, type HashChain, type MerkleNode, type PageData, type ResultStatus, ResultStatusEnum, type Revision, type RevisionAquaChainResult, type RevisionContent, type RevisionMetadata, type RevisionSignature, type RevisionVerificationResult, type RevisionWitness, type StructuredMerkleProof, type Timestamp, type VerificationOptions, type VerifyFileResult, AquaVerifier as default, getTimestampDirect, getTimestampSafe };
+export { type CheckEtherScanResult, type FileContent, type HashChain, type MerkleNode, type PageData,  type Revision, type RevisionAquaChainResult, type RevisionContent, type RevisionMetadata, type RevisionSignature, type RevisionVerificationResult, type RevisionWitness, type StructuredMerkleProof, type Timestamp, type VerificationOptions, type VerifyFileResult, AquaVerifier as default, getTimestampDirect, getTimestampSafe };
