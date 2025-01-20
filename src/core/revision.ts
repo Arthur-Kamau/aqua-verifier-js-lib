@@ -67,12 +67,44 @@ export function generateContentRevision(aqua_chain: AquaChain, file_name: string
     }
 
 
+    let revision: Revision = {
+        previous_verification_hash: "",
+        nonce: prepareNonce(),
+        local_timestamp: getTimestamp(),
+        revision_type: "content"
+    }
 
+    revision.content = file_data
+
+
+    // Merklelize the dictionary
+    const leaves = dict2Leaves(revision);
+    // Clean up leaves by removing "1220" prefix if present
+    const cleanedLeaves = leaves.map(leaf =>
+        typeof leaf === 'string' && leaf.startsWith('1220')
+            ? leaf.slice(4)  // Remove first 4 characters ("1220")
+            : leaf
+    )
+
+    const tree = new MerkleTree(cleanedLeaves, sha256Hasher, {
+        duplicateOdd: false,
+    });
+
+
+    revision.leaves = leaves
+
+    let verification_hash = tree.getHexRoot()
+
+
+    aqua_chain.revisions[verification_hash] = revision;
+
+
+    result.aquaChain = aqua_chain;
     result.logs = logs;
     return result;
 }
 
-export function generateScalaRevision(aqua_chain: AquaChain): AquaChainResult {
+export function generateScalaRevision(aqua_chain: AquaChain, file_data: string): AquaChainResult {
 
     let logs: Array<ProtocolLogs> = []
     let result: AquaChainResult = {
@@ -81,17 +113,25 @@ export function generateScalaRevision(aqua_chain: AquaChain): AquaChainResult {
         aquaChain: null
     }
 
-    let file_hash_data = getHashSum(file_data);
-
-    let genesisRevision: Revision = {
+    let revision: Revision = {
         previous_verification_hash: "",
         nonce: prepareNonce(),
         local_timestamp: getTimestamp(),
         revision_type: "file_hash",
-        file_hash: file_hash_data
+        file_hash: aqua_chain.revisions[Object.keys(aqua_chain.revisions)[0]].file_hash
 
     }
 
+    // Get the existing revisions and add the new revision
+    let revision_in_chain = aqua_chain.revisions;
+    let verification_hash = "0x" + getHashSum(JSON.stringify(revision));
+    revision_in_chain[verification_hash] = revision;
+
+    let chain = aqua_chain;
+    chain.revisions = revision_in_chain;
+
+
+    result.aquaChain = chain;
     result.logs = logs;
     return result;
 }
