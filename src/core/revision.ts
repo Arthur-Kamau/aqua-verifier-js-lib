@@ -1,5 +1,5 @@
 import { RevisionVerificationResult, ResultStatus, ResultStatusEnum, RevisionAquaChainResult, AquaChainResult } from "../models/library_models";
-import { AquaChain, ProtocolLogs, Revision } from "../models/protocol_models";
+import { AquaChain, ProtocolLogs, ProtocolLogsType, Revision } from "../models/protocol_models";
 import { dict2Leaves, getHashSum, getTimestamp, prepareNonce, sha256Hasher } from "../utils/utils";
 import { MerkleTree } from "merkletreejs"
 
@@ -31,12 +31,12 @@ export function generateGenesisRevisionUtil(file_name: string, file_data: string
             ? leaf.slice(4)  // Remove first 4 characters ("1220")
             : leaf
     )
-    
+
     const tree = new MerkleTree(cleanedLeaves, sha256Hasher, {
         duplicateOdd: false,
     });
 
-    
+
     genesisRevision.leaves = leaves
 
     let verification_hash = tree.getHexRoot()
@@ -81,7 +81,16 @@ export function generateScalaRevision(aqua_chain: AquaChain): AquaChainResult {
         aquaChain: null
     }
 
+    let file_hash_data = getHashSum(file_data);
 
+    let genesisRevision: Revision = {
+        previous_verification_hash: "",
+        nonce: prepareNonce(),
+        local_timestamp: getTimestamp(),
+        revision_type: "file_hash",
+        file_hash: file_hash_data
+
+    }
 
     result.logs = logs;
     return result;
@@ -97,6 +106,43 @@ export function removeLastRevision(aqua_chain: AquaChain): AquaChainResult {
     }
 
 
+    // Check if there are more than one revision
+    if (Object.keys(aqua_chain.revisions).length > 1) {
+        const newChain = { ...aqua_chain }; // Clone the AquaChain
+        const revisions = { ...aqua_chain.revisions }; // Clone revisions
+
+        // Get the last revision
+        const revisionKeys = Object.keys(revisions);
+        const lastKey = revisionKeys[revisionKeys.length - 1];
+
+        if (lastKey) {
+            // Remove the last revision
+            delete revisions[lastKey];
+            newChain.revisions = revisions;
+
+            // Add a log for the removed revision
+            logs.push({
+                log: `Removed revision with hash: ${lastKey}`,
+                log_type: ProtocolLogsType.INFO
+            });
+
+            // Update result
+            result.isSuccessful = true;
+            result.aquaChain = newChain;
+        } else {
+            // Add a log if no revisions to remove
+            logs.push({
+                log: "No revisions to remove",
+                log_type: ProtocolLogsType.ERROR
+            });
+        }
+    } else {
+        // Add a log if trying to delete the genesis revision
+        logs.push({
+            log: "Cannot delete file hash (genesis revision)",
+            log_type: ProtocolLogsType.ERROR
+        });
+    }
 
 
     result.logs = logs;

@@ -49,5 +49,5 @@ export enum ProtocolLogsType {
 
 export interface ProtocolLogs {
     log: string;
-    logType: ProtocolLogsType;
+    log_type: ProtocolLogsType;
 }
