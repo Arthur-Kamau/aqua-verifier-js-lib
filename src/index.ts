@@ -1,5 +1,9 @@
-import { verifyAquaChain, verifyRevision, verifySignature, verifyWitness } from "./aquaVerifier";
-import { HashChain, Revision, RevisionAquaChainResult, RevisionSignature, RevisionVerificationResult, RevisionWitness } from "./models/library_models";
+// import { verifyAquaChain, verifyRevision, verifySignature, verifyWitness } from "./aquaVerifier";
+import { verifyAquaChain, verifyRevision } from "./core/revision";
+import { verifySignature } from "./core/signature";
+import { verifyWitness } from "./core/witness";
+import { AquaChainResult,  RevisionAquaChainResult,  RevisionVerificationResult } from "./models/library_models";
+import { AquaChain, Revision } from "./models/protocol_models";
 
 export *  from "./models/library_models";
 
@@ -33,50 +37,59 @@ export default class AquaVerifier {
         return this.options
     }
 
+
+    public generateGenesisRevision(file_name: string, file_data : string)   : AquaChainResult{
+        throw new Error("Unimplmeneted error .... ");
+    }
+
+    public generateContentRevision(aqua_chain : AquaChain ,file_name: string, file_data : string)  : AquaChainResult {
+        throw new Error("Unimplmeneted error .... ");
+    }
+
+    public generateScalaRevision(aqua_chain : AquaChain )  : AquaChainResult{
+        throw new Error("Unimplmeneted error .... ");
+    }
+
+    public removeLastRevision(aqua_chain : AquaChain ) : AquaChainResult {
+        throw new Error("Unimplmeneted error .... ");
+    }
+
+
     public verifyRevision(revision: Revision): Promise<RevisionVerificationResult> {
         if (this.options.doAlchemyKeyLookUp && this.options.alchemyKey === "") {
             throw new Error("ALCHEMY KEY NOT SET");
         }
-        return verifyRevision(revision as Revision, this.options.alchemyKey, this.options.doAlchemyKeyLookUp)
+        return verifyRevision(revision, this.options.alchemyKey, this.options.doAlchemyKeyLookUp)
 
     }
 
-    public verifySignature(signature: RevisionSignature, previous_hash: string) {
-        if (this.options.version == 1.2) {
-            return verifySignature(signature as RevisionSignature, previous_hash)
-        }
-        return null
+    public verifySignature(signature: Revision, previous_hash: string) {
+        return verifySignature(signature , previous_hash)
+      
     }
 
-    public verifyWitness(witness: RevisionWitness, verification_hash: string,
+    public verifyWitness(witness: Revision, verification_hash: string,
         doVerifyMerkleProof: boolean) {
         if (this.options.doAlchemyKeyLookUp && this.options.alchemyKey === "") {
             throw new Error("ALCHEMY KEY NOT SET");
         }
-        return verifyWitness(witness as RevisionWitness, verification_hash, doVerifyMerkleProof, this.options.alchemyKey, this.options.doAlchemyKeyLookUp)
+        return verifyWitness(witness, verification_hash, doVerifyMerkleProof, this.options.alchemyKey, this.options.doAlchemyKeyLookUp)
 
     }
 
-    // TODO: Fix: verifier can't sign nor witness files. So this two methods might be out of place here because the verifier is verify AQUA Chain
-    // public signFile() {
-
-    // }
-
-    // public witnessFile() {
-
-    // }
+   
 
     public verifyMerkleTree() {
         throw new Error("Unimplmeneted error .... ");
 
     }
 
-    public verifyAquaChain(hashChain: HashChain): Promise<RevisionAquaChainResult> {
+    public verifyAquaChain(aquaChain: AquaChain): Promise<RevisionAquaChainResult> {
         if (this.options.doAlchemyKeyLookUp && this.options.alchemyKey === "") {
             throw new Error("ALCHEMY KEY NOT SET");
         }
 
-        return verifyAquaChain(hashChain as HashChain, this.options.alchemyKey, this.options.doAlchemyKeyLookUp)
+        return verifyAquaChain(aquaChain, this.options.alchemyKey, this.options.doAlchemyKeyLookUp)
 
     }
 }

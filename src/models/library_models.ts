@@ -1,4 +1,12 @@
 
+import { ProtocolLogs , AquaChain} from './protocol_models'; 
+
+export interface AquaChainResult {
+    isSuccessful: boolean;
+    logs: ProtocolLogs[];
+    aquaChain?: AquaChain | null;
+}
+
 
 export interface Timestamp {
     seconds: number;

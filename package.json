@@ -27,7 +27,13 @@
     "js-sha3": "^0.8.0",
     "minimist": "^1.2.8",
     "node-fetch": "^3.3.2",
-    "xml2js": "^0.6.2"
+    "xml2js": "^0.6.2",
+    "did-resolver": "^4.1.0",
+    "dids": "^5.0.3",
+    "key-did-provider-ed25519": "^4.0.2",
+    "key-did-resolver": "^4.0.0",
+    "merkletreejs": "^0.4.0",
+    "multihashes-sync": "^2.0.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
@@ -35,6 +41,14 @@
     "ts-jest": "^29.2.5",
     "tsup": "^8.3.4",
     "typescript": "^5.0.0"
+  },
+  "optionalDependencies": {
+    "asn1js": "^3.0.5",
+    "nostr-tools": "^2.7.2",
+    "open": "^10.1.0",
+    "openid-client": "^5.7.0",
+    "pkijs": "^3.2.4",
+    "sigstore": "^3.0.0"
   },
   "files": [
     "dist"

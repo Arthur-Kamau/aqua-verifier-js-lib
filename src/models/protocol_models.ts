@@ -4,30 +4,31 @@
 import { Timestamp } from "./library_models";
 
 export interface AquaChain {
-    fileIndex:  Record<string, string>;// [string, string][];
-    revisions:  Record<string, Revision> ;//[string, Revision][];
+    file_index: Record<string, string>;
+    revisions: Record<string, Revision>;
 }
+
 export interface Revision {
-    previousVerificationHash: string;
+    previous_verification_hash: string;
     nonce: string;
-    localTimestamp: Timestamp;
-    revisionType: string;
-    fileHash?: string | null;
+    local_timestamp: string;
+    revision_type: string;
+    file_hash?: string | null;
     content?: string | null;
-    linkType?: string | null;
-    linkRequireIndepthVerification?: boolean | null;
-    linkVerificationHash?: string | null;
-    linkUri?: string | null;
+    link_type?: string | null;
+    link_require_indepth_verification?: boolean | null;
+    link_verification_hash?: string | null;
+    link_uri?: string | null;
     signature?: string | null;
-    signaturePublicKey?: string | null;
-    signatureWalletAddress?: string | null;
-    signatureType?: string | null;
-    witnessMerkleRoot?: string | null;
-    witnessTimestamp?: Timestamp | null;
-    witnessNetwork?: string | null;
-    witnessSmartContractAddress?: string | null;
-    witnessTransactionHash?: string | null;
-    witnessSenderAccountAddress?: string | null;
+    signature_public_key?: string | null;
+    signature_wallet_address?: string | null;
+    signature_type?: string | null;
+    witness_merkle_root?: string | null;
+    witness_timestamp?: Timestamp | null;
+    witness_network?: string | null;
+    witness_smart_contract_address?: string | null;
+    witness_transaction_hash?: string | null;
+    witness_sender_account_address?: string | null;
     leaves?: string[] | null;
 }
 
