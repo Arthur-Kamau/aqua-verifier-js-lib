@@ -1,5 +1,7 @@
-import { ResultStatus, ResultStatusEnum, Revision, RevisionContent, RevisionSignature, RevisionVerificationResult, VerifyFileResult, RevisionWitness, PageData, HashChain, RevisionAquaChainResult } from "./models/library_models";
-import { getHashSum, jsonReplacer, verifyContentUtil, verifyFileUtil, verifyMetadataUtil, verifyWitnessUtil, verifySignatureUtil } from "./utils/utils";
+import { ResultStatus, ResultStatusEnum,    RevisionVerificationResult, VerifyFileResult,    RevisionAquaChainResult } from "./models/library_models";
+import { AquaChain, Revision } from "./models/protocol_models";
+import { verifySignatureUtil, verifyWitnessUtil } from "./utils/utils";
+// import { getHashSum, jsonReplacer, verifyContentUtil, verifyFileUtil, verifyMetadataUtil, verifyWitnessUtil, verifySignatureUtil } from "./utils/utils";
 
 const INVALID_VERIFICATION_STATUS = "INVALID"
 const VERIFIED_VERIFICATION_STATUS = "VERIFIED"
@@ -21,49 +23,49 @@ export async function verifyRevision(revision: Revision, alchemyKey: string ,doA
         metadata_verification: JSON.parse(JSON.stringify(defaultResultStatus))
     }
 
-    const [fileIsCorrect, fileOut] = verifyFileUtil(revision.content);
-    revisionResult.file_verification.status = ResultStatusEnum.AVAILABLE;
-    revisionResult.file_verification.successful = fileIsCorrect;
-    revisionResult.file_verification.message = fileOut.error_message ?? "";
+    // const [fileIsCorrect, fileOut] = verifyFileUtil(revision.content);
+    // revisionResult.file_verification.status = ResultStatusEnum.AVAILABLE;
+    // revisionResult.file_verification.successful = fileIsCorrect;
+    // revisionResult.file_verification.message = fileOut.error_message ?? "";
 
     // Verify Content
-    let [verifyContentIsOkay, resultMessage] = verifyContentUtil(revision.content);
-    revisionResult.content_verification.status = ResultStatusEnum.AVAILABLE;
-    revisionResult.content_verification.successful = verifyContentIsOkay;
-    revisionResult.content_verification.message = resultMessage;
+    // let [verifyContentIsOkay, resultMessage] = verifyContentUtil(revision.content);
+    // revisionResult.content_verification.status = ResultStatusEnum.AVAILABLE;
+    // revisionResult.content_verification.successful = verifyContentIsOkay;
+    // revisionResult.content_verification.message = resultMessage;
 
-    // Verify Metadata 
-    let [metadataOk, metadataHashMessage] = verifyMetadataUtil(revision.metadata);
-    revisionResult.metadata_verification.status = ResultStatusEnum.AVAILABLE;
-    revisionResult.metadata_verification.successful = metadataOk;
-    revisionResult.metadata_verification.message = metadataHashMessage;
+    // // Verify Metadata 
+    // let [metadataOk, metadataHashMessage] = verifyMetadataUtil(revision.metadata);
+    // revisionResult.metadata_verification.status = ResultStatusEnum.AVAILABLE;
+    // revisionResult.metadata_verification.successful = metadataOk;
+    // revisionResult.metadata_verification.message = metadataHashMessage;
 
-    // Verify Signature
-    if (revision.signature) {
-        let [signatureOk, signatureMessage] = verifySignatureUtil(revision.signature, revision.metadata.previous_verification_hash ?? "");
-        revisionResult.signature_verification.status = ResultStatusEnum.AVAILABLE;
-        revisionResult.signature_verification.successful = signatureOk;
-        revisionResult.signature_verification.message = signatureMessage;
-    }
+    // // Verify Signature
+    // if (revision.signature) {
+    //     let [signatureOk, signatureMessage] = verifySignatureUtil(revision.signature, revision.metadata.previous_verification_hash ?? "");
+    //     revisionResult.signature_verification.status = ResultStatusEnum.AVAILABLE;
+    //     revisionResult.signature_verification.successful = signatureOk;
+    //     revisionResult.signature_verification.message = signatureMessage;
+    // }
 
-    // Verify Witness (asynchronous)
-    if (revision.witness) {
-        try {
-            const [success, message] = await verifyWitnessUtil(
-                revision.witness,
-                revision.metadata.previous_verification_hash ?? "",
-                revision.witness.structured_merkle_proof.length > 1,
-                alchemyKey,
-                doAlchemyKeyLookUp
+    // // Verify Witness (asynchronous)
+    // if (revision.witness) {
+    //     try {
+    //         const [success, message] = await verifyWitnessUtil(
+    //             revision.witness,
+    //             revision.metadata.previous_verification_hash ?? "",
+    //             revision.witness.structured_merkle_proof.length > 1,
+    //             alchemyKey,
+    //             doAlchemyKeyLookUp
 
-            );
-            revisionResult.witness_verification.status = ResultStatusEnum.AVAILABLE;
-            revisionResult.witness_verification.successful = success;
-            revisionResult.witness_verification.message = message // message if needed
-        } catch (err) {
-            console.log("Witnessing error: ", err);
-        }
-    }
+    //         );
+    //         revisionResult.witness_verification.status = ResultStatusEnum.AVAILABLE;
+    //         revisionResult.witness_verification.successful = success;
+    //         revisionResult.witness_verification.message = message // message if needed
+    //     } catch (err) {
+    //         console.log("Witnessing error: ", err);
+    //     }
+    // }
 
     // Check the overall status
     let allSuccessful = true;
@@ -82,7 +84,7 @@ export async function verifyRevision(revision: Revision, alchemyKey: string ,doA
 
 
 
-export function verifySignature(signature: RevisionSignature, previous_verification_hash: string): ResultStatus {
+export function verifySignature(signature: Revision, previous_verification_hash: string): ResultStatus {
 
     let defaultResultStatus: ResultStatus = {
         status: ResultStatusEnum.MISSING,
@@ -101,7 +103,7 @@ export function verifySignature(signature: RevisionSignature, previous_verificat
 }
 
 
-export async function verifyWitness(witness: RevisionWitness, verification_hash: string,
+export async function verifyWitness(witness: Revision, verification_hash: string,
     doVerifyMerkleProof: boolean, alchemyKey: string,doAlchemyKeyLookUp: boolean): Promise<ResultStatus> {
 
     let defaultResultStatus: ResultStatus = {
@@ -120,7 +122,7 @@ export async function verifyWitness(witness: RevisionWitness, verification_hash:
     return defaultResultStatus;
 }
 
-export async function verifyAquaChain(aquaChain: HashChain, alchemyKey: string, doAlchemyKeyLookUp: boolean) : Promise<RevisionAquaChainResult> {
+export async function verifyAquaChain(aquaChain: AquaChain, alchemyKey: string, doAlchemyKeyLookUp: boolean) : Promise<RevisionAquaChainResult> {
 
     const hashChainResult: RevisionAquaChainResult = {
         successful: true,
