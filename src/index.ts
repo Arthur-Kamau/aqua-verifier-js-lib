@@ -1,5 +1,5 @@
-// import { verifyAquaChain, verifyRevision, verifySignature, verifyWitness } from "./aquaVerifier";
-import { verifyAquaChain, verifyRevision } from "./core/revision";
+// import { verifyAquaChain, verifyRevision, verifySignature, verifyWitness } from "./AquaProtocol";
+import { generateContentRevision, generateGenesisRevisionUtil, generateScalaRevision, removeLastRevision, verifyAquaChain, verifyRevision } from "./core/revision";
 import { verifySignature } from "./core/signature";
 import { verifyWitness } from "./core/witness";
 import { AquaChainResult,  FileData,  RevisionAquaChainResult } from "./models/library_models";
@@ -17,7 +17,7 @@ export interface VerificationOptions {
 }
 
 
-export default class AquaVerifier {
+export default class AquaProtocol {
 
     private options: VerificationOptions;
 
@@ -39,23 +39,23 @@ export default class AquaVerifier {
 
 
     public generateGenesisRevision(file_name: string, file_data : string)   : AquaChainResult{
-        throw new Error("Unimplmeneted error .... ");
+        return generateGenesisRevisionUtil(file_name, file_data);
     }
 
     public generateContentRevision(aqua_chain : AquaChain ,file_name: string, file_data : string)  : AquaChainResult {
-        throw new Error("Unimplmeneted error .... ");
+       return generateContentRevision(aqua_chain, file_name, file_data);
     }
 
     public generateScalaRevision(aqua_chain : AquaChain )  : AquaChainResult{
-        throw new Error("Unimplmeneted error .... ");
+        return generateScalaRevision(aqua_chain);
     }
 
     public removeLastRevision(aqua_chain : AquaChain ) : AquaChainResult {
-        throw new Error("Unimplmeneted error .... ");
+       return removeLastRevision(aqua_chain);
     }
 
 
-    public verifyRevision(revision: Revision, linkedRevisions: Array<Revision>, fileData: Array<FileData>): Promise<RevisionAquaChainResult> {
+    public verifyRevision(revision: Revision, linkedRevisions: Array<AquaChain>, fileData: Array<FileData>): Promise<RevisionAquaChainResult> {
         if (this.options.doAlchemyKeyLookUp && this.options.alchemyKey === "") {
             throw new Error("ALCHEMY KEY NOT SET");
         }
@@ -81,7 +81,7 @@ export default class AquaVerifier {
 
    
 
-    public verifyAquaChain(aquaChain: AquaChain, linkedRevisions: Array<Revision>, fileData: Array<FileData>): Promise<RevisionAquaChainResult> {
+    public verifyAquaChain(aquaChain: AquaChain, linkedRevisions: Array<AquaChain>, fileData: Array<FileData>): Promise<RevisionAquaChainResult> {
         if (this.options.doAlchemyKeyLookUp && this.options.alchemyKey === "") {
             throw new Error("ALCHEMY KEY NOT SET");
         }

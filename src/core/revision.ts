@@ -79,7 +79,7 @@ export function generateContentRevision(aqua_chain: AquaChain, file_name: string
     revision.content = file_data
 
 
-    // Merklelize the dictionary
+    // Merklelize the dictionarfile_indexy
     const leaves = dict2Leaves(revision);
     // Clean up leaves by removing "1220" prefix if present
     const cleanedLeaves = leaves.map(leaf =>
@@ -106,7 +106,7 @@ export function generateContentRevision(aqua_chain: AquaChain, file_name: string
     return result;
 }
 
-export function generateScalaRevision(aqua_chain: AquaChain, file_data: string): AquaChainResult {
+export function generateScalaRevision(aqua_chain: AquaChain): AquaChainResult {
 
     let logs: Array<ProtocolLogs> = []
     let result: AquaChainResult = {
@@ -192,7 +192,7 @@ export function removeLastRevision(aqua_chain: AquaChain): AquaChainResult {
 }
 
 
-export async function verifyAquaChain(aquaChain: AquaChain, linkedRevisions: Array<Revision>, fileData: Array<FileData>): Promise<RevisionAquaChainResult> {
+export async function verifyAquaChain(aquaChain: AquaChain, linkedRevisions: Array<AquaChain>, fileData: Array<FileData>): Promise<RevisionAquaChainResult> {
 
     const hashChainResult: RevisionAquaChainResult = {
         successful: false,
@@ -204,7 +204,7 @@ export async function verifyAquaChain(aquaChain: AquaChain, linkedRevisions: Arr
 
     for (let j = 0; j < revisionHashes.length; j++) {
         const revision = aquaChain.revisions[revisionHashes[j]]
-        const revisionResult: RevisionAquaChainResult = await verifyRevision(revision,linkedRevisions, fileData)
+        const revisionResult: RevisionAquaChainResult = await verifyRevision(revision, linkedRevisions, fileData)
         hashChainResult.revisionResults.push(revisionResult)
     }
 
@@ -219,7 +219,7 @@ export async function verifyAquaChain(aquaChain: AquaChain, linkedRevisions: Arr
 }
 
 
-export async function verifyRevision(revision: Revision,linkedRevisions: Array<Revision>, fileData: Array<FileData>): Promise<RevisionAquaChainResult> {
+export async function verifyRevision(revision: Revision, linkedChains: Array<AquaChain>, fileData: Array<FileData>): Promise<RevisionAquaChainResult> {
 
 
 
@@ -230,6 +230,11 @@ export async function verifyRevision(revision: Revision,linkedRevisions: Array<R
         revisionResults: []
     }
 
+
+    logs.push({
+        log:`revision is of type  ${revision.revision_type}   `,
+        log_type: ProtocolLogsType.INFO
+    })
 
     let typeOk: boolean = false
     switch (revision.revision_type) {
@@ -266,19 +271,57 @@ export async function verifyRevision(revision: Revision,linkedRevisions: Array<R
             // its to be improved in future
             let [ok2, logs_data2] = await verifyWitness(
                 revision,
-                false, 
+                false,
             )
             logs = logs.concat(logs_data2)
             typeOk = ok2
             break
-            break
         case "link":
+
+            let chain = undefined;
+
+            for (const element of linkedChains) {
+                // Get the keys of file_index
+                const keys = Object.keys(element.file_index);
+
+                // Access the first key
+                const firstKey = keys[0];
+
+                if (firstKey) {
+                    // Use the key to get the corresponding value
+                    const fileName = element.file_index[firstKey];
+                    console.log("File Name:", fileName); // Output: "name.md"
+
+
+                    if (revision.link_uri == fileName) {
+                        chain = element;
+                        break;
+                    }
+                } else {
+                    console.log("file_index is empty");
+                }
+
+            }
+
+            if (chain!=undefined){
+              let result =  await  verifyAquaChain(chain, linkedChains, fileData);
+
+              logs.push({
+                log:`chain linked  ${revision.link_uri} verification  is ${result.successful ? "successfull" : "not successfull"} `,
+                log_type: ProtocolLogsType.INFO
+            })
+
+              typeOk =  result.successful;
+              result.logs.forEach((item)=>logs.push(item));
+
+            }else{
+                typeOk = false;
+                logs.push({
+                    log:`chain linked in revision ${revision.link_uri} not found`,
+                    log_type: ProtocolLogsType.ERROR
+                })
+            }
             
-            // const offlineData = await readExportFile(input.link_uri)
-            // let linkStatus: string
-            // [linkStatus, _] = await verifyPage(offlineData, false, doVerifyMerkleProof)
-            // typeOk = (linkStatus === VERIFIED_VERIFICATION_STATUS)
-           
             break
 
     }
