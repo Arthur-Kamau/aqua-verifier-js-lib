@@ -3,7 +3,6 @@ import { randomBytes } from 'crypto'
 import { MerkleTree } from "merkletreejs"
 import { sha256 } from "multihashes-sync/sha2"
 import { bytes } from 'multiformats'
-import { AquaChain } from '../models/protocol_models'
 import crypto from "crypto"
 
 function formatMwTimestamp(ts: string) {

@@ -2,10 +2,10 @@
 import { generateContentRevision, generateGenesisRevisionUtil, generateScalaRevision, removeLastRevision, verifyAquaChain, verifyRevision } from "./core/revision";
 import { verifySignature } from "./core/signature";
 import { verifyWitness } from "./core/witness";
-import { AquaChainResult,  FileData,  RevisionAquaChainResult } from "./models/library_models";
+import { AquaChainResult, FileData, RevisionAquaChainResult } from "./models/library_models";
 import { AquaChain, ProtocolLogs, Revision } from "./models/protocol_models";
 
-export *  from "./models/library_models";
+export * from "./models/library_models";
 
 export interface VerificationOptions {
     version: number;
@@ -38,20 +38,20 @@ export default class AquaProtocol {
     }
 
 
-    public generateGenesisRevision(file_name: string, file_data : string)   : AquaChainResult{
+    public generateGenesisRevision(file_name: string, file_data: string): AquaChainResult {
         return generateGenesisRevisionUtil(file_name, file_data);
     }
 
-    public generateContentRevision(aqua_chain : AquaChain ,file_name: string, file_data : string)  : AquaChainResult {
-       return generateContentRevision(aqua_chain, file_name, file_data);
+    public generateContentRevision(aqua_chain: AquaChain, file_name: string, file_data: string): AquaChainResult {
+        return generateContentRevision(aqua_chain, file_name, file_data);
     }
 
-    public generateScalaRevision(aqua_chain : AquaChain )  : AquaChainResult{
+    public generateScalaRevision(aqua_chain: AquaChain): AquaChainResult {
         return generateScalaRevision(aqua_chain);
     }
 
-    public removeLastRevision(aqua_chain : AquaChain ) : AquaChainResult {
-       return removeLastRevision(aqua_chain);
+    public removeLastRevision(aqua_chain: AquaChain): AquaChainResult {
+        return removeLastRevision(aqua_chain);
     }
 
 
@@ -59,32 +59,32 @@ export default class AquaProtocol {
         if (this.options.doAlchemyKeyLookUp && this.options.alchemyKey === "") {
             throw new Error("ALCHEMY KEY NOT SET");
         }
-        return verifyRevision(revision,linkedRevisions, fileData)
+        return verifyRevision(revision, linkedRevisions, fileData)
 
     }
 
-    public verifySignature(signature: Revision) : Promise <[boolean, ProtocolLogs[]] > {
+    public verifySignature(signature: Revision): Promise<[boolean, ProtocolLogs[]]> {
         return verifySignature(signature)
-      
+
     }
 
     public verifyWitness(witness: Revision, verification_hash: string,
-        doVerifyMerkleProof: boolean) : Promise <[boolean, ProtocolLogs[]] > {
-        if (this.options.doAlchemyKeyLookUp && this.options.alchemyKey === "") {
-            throw new Error("ALCHEMY KEY NOT SET");
-        }
+        doVerifyMerkleProof: boolean): Promise<[boolean, ProtocolLogs[]]> {
+        // if (this.options.doAlchemyKeyLookUp && this.options.alchemyKey === "") {
+        //     throw new Error("ALCHEMY KEY NOT SET");
+        // }
         // witness merkle proof verification is not implemented
-            // its to be improved in future
+        // its to be improved in future
         return verifyWitness(witness, false)
 
     }
 
-   
+
 
     public verifyAquaChain(aquaChain: AquaChain, linkedRevisions: Array<AquaChain>, fileData: Array<FileData>): Promise<RevisionAquaChainResult> {
-        if (this.options.doAlchemyKeyLookUp && this.options.alchemyKey === "") {
-            throw new Error("ALCHEMY KEY NOT SET");
-        }
+        // if (this.options.doAlchemyKeyLookUp && this.options.alchemyKey === "") {
+        //     throw new Error("ALCHEMY KEY NOT SET");
+        // }
 
         return verifyAquaChain(aquaChain, linkedRevisions, fileData)
 
